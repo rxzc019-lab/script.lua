@@ -1,0 +1,510 @@
+-- ========================================================
+-- 🟡 UBN HUB V17.0 (100% ULTRA COMPATIBLE - ALL EXECUTORS)
+-- ========================================================
+
+pcall(function()
+    local Players = game:GetService("Players")
+    local RunService = game:GetService("RunService")
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    local LocalPlayer = Players.LocalPlayer
+    local Camera = workspace.CurrentCamera
+
+    -- State Variables
+    local ESP_Enabled = false
+    local AutoShoot_Enabled = false
+    local BigHead_Enabled = false
+    local Head_Size = 5
+    local CurrentESPColor = Color3.fromRGB(255, 215, 0)
+    local IsRainbowESP = false
+
+    local Spinbot_Enabled = false
+    local Spin_Speed = 50
+    local RainbowChams_Enabled = false
+
+    -- Safe ScreenGui Parent Setup
+    local ScreenGui = Instance.new("ScreenGui")
+    ScreenGui.Name = "UBNYellowHubV17"
+    ScreenGui.ResetOnSpawn = false
+    ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+    -- ป้องกันปัญหา Parent UI ใน Executor ทุกประเภท
+    local parentTarget = nil
+    if gethui then
+        parentTarget = gethui()
+    elseif syn and syn.protect_gui then
+        syn.protect_gui(ScreenGui)
+        parentTarget = game:GetService("CoreGui")
+    elseif game:GetService("CoreGui"):FindFirstChild("RobloxGui") then
+        parentTarget = game:GetService("CoreGui")
+    else
+        parentTarget = LocalPlayer:WaitForChild("PlayerGui")
+    end
+    ScreenGui.Parent = parentTarget
+
+    -- ลบ UI เก่าถ้ามีอยู่
+    for _, old in pairs(parentTarget:GetChildren()) do
+        if old.Name == "UBNYellowHubV17" and old ~= ScreenGui then
+            old:Destroy()
+        end
+    end
+
+    -- ========================================================
+    -- 🟡 TOGGLE BUTTON
+    -- ========================================================
+
+    local ToggleIconBtn = Instance.new("ImageButton")
+    ToggleIconBtn.Name = "ToggleIconBtn"
+    ToggleIconBtn.Size = UDim2.new(0, 50, 0, 50)
+    ToggleIconBtn.Position = UDim2.new(0, 15, 0.5, -25)
+    ToggleIconBtn.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+    ToggleIconBtn.Image = "rbxassetid://113352492059533"
+    ToggleIconBtn.Active = true
+    ToggleIconBtn.Draggable = true
+    ToggleIconBtn.ZIndex = 100
+    ToggleIconBtn.Parent = ScreenGui
+
+    local IconCorner = Instance.new("UICorner")
+    IconCorner.CornerRadius = UDim.new(1, 0)
+    IconCorner.Parent = ToggleIconBtn
+
+    local IconStroke = Instance.new("UIStroke")
+    IconStroke.Color = Color3.fromRGB(255, 215, 0)
+    IconStroke.Thickness = 2
+    IconStroke.Parent = ToggleIconBtn
+
+    -- ========================================================
+    -- 🟨 MAIN UI FRAME
+    -- ========================================================
+
+    local MainFrame = Instance.new("Frame")
+    MainFrame.Name = "MainFrame"
+    MainFrame.Size = UDim2.new(0, 310, 0, 540)
+    MainFrame.Position = UDim2.new(0.5, -155, 0.5, -270)
+    MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+    MainFrame.BorderSizePixel = 0
+    MainFrame.Active = true
+    MainFrame.Draggable = true
+    MainFrame.ZIndex = 10
+    MainFrame.Parent = ScreenGui
+
+    local MainUICorner = Instance.new("UICorner")
+    MainUICorner.CornerRadius = UDim.new(0, 10)
+    MainUICorner.Parent = MainFrame
+
+    local MainUIStroke = Instance.new("UIStroke")
+    MainUIStroke.Color = Color3.fromRGB(255, 215, 0)
+    MainUIStroke.Thickness = 2
+    MainUIStroke.Parent = MainFrame
+
+    local TitleLabel = Instance.new("TextLabel")
+    TitleLabel.Size = UDim2.new(1, -40, 0, 40)
+    TitleLabel.Position = UDim2.new(0, 12, 0, 0)
+    TitleLabel.BackgroundTransparency = 1
+    TitleLabel.Text = "⚡ UBN HUB V17 (SAFE LOAD) ⚡"
+    TitleLabel.TextColor3 = Color3.fromRGB(255, 215, 0)
+    TitleLabel.TextSize = 13
+    TitleLabel.Font = Enum.Font.GothamBold
+    TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+    TitleLabel.Parent = MainFrame
+
+    local CloseBtn = Instance.new("TextButton")
+    CloseBtn.Size = UDim2.new(0, 28, 0, 28)
+    CloseBtn.Position = UDim2.new(1, -34, 0, 6)
+    CloseBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+    CloseBtn.Text = "❌"
+    CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    CloseBtn.TextSize = 12
+    CloseBtn.Parent = MainFrame
+
+    local CloseCorner = Instance.new("UICorner")
+    CloseCorner.CornerRadius = UDim.new(0, 6)
+    CloseCorner.Parent = CloseBtn
+
+    local ScrollingFrame = Instance.new("ScrollingFrame")
+    ScrollingFrame.Size = UDim2.new(1, -16, 1, -50)
+    ScrollingFrame.Position = UDim2.new(0, 8, 0, 42)
+    ScrollingFrame.BackgroundTransparency = 1
+    ScrollingFrame.ScrollBarThickness = 4
+    ScrollingFrame.ScrollBarImageColor3 = Color3.fromRGB(255, 215, 0)
+    ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, 600)
+    ScrollingFrame.Parent = MainFrame
+
+    local UIList = Instance.new("UIListLayout")
+    UIList.SortOrder = Enum.SortOrder.LayoutOrder
+    UIList.Padding = UDim.new(0, 8)
+    UIList.Parent = ScrollingFrame
+
+    local function CreateToggle(text, order, callback)
+        local Btn = Instance.new("TextButton")
+        Btn.Size = UDim2.new(1, -8, 0, 35)
+        Btn.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+        Btn.Text = text .. " : [ OFF ]"
+        Btn.TextColor3 = Color3.fromRGB(200, 200, 200)
+        Btn.TextSize = 11
+        Btn.Font = Enum.Font.GothamSemibold
+        Btn.LayoutOrder = order
+        Btn.Parent = ScrollingFrame
+
+        local Corner = Instance.new("UICorner")
+        Corner.CornerRadius = UDim.new(0, 6)
+        Corner.Parent = Btn
+
+        local enabled = false
+        Btn.MouseButton1Click:Connect(function()
+            enabled = not enabled
+            if enabled then
+                Btn.BackgroundColor3 = Color3.fromRGB(255, 190, 0)
+                Btn.Text = text .. " : [ ON ]"
+                Btn.TextColor3 = Color3.fromRGB(10, 10, 10)
+            else
+                Btn.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+                Btn.Text = text .. " : [ OFF ]"
+                Btn.TextColor3 = Color3.fromRGB(200, 200, 200)
+            end
+            callback(enabled)
+        end)
+        return Btn
+    end
+
+    CreateToggle("👁️ เปิด ESP (ตรงตัว 100%)", 1, function(st) ESP_Enabled = st end)
+    CreateToggle("🔥 เปิดระบบยิงคนเองรัวๆ (Auto Shoot)", 2, function(st) AutoShoot_Enabled = st end)
+
+    CreateToggle("🧠 เปิดระบบหัวใหญ่ (Big Head)", 3, function(st) 
+        BigHead_Enabled = st 
+        if not st then
+            for _, p in pairs(Players:GetPlayers()) do
+                if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("Head") then
+                    p.Character.Head.Size = Vector3.new(1.2, 1.2, 1.2)
+                    p.Character.Head.Transparency = 0
+                end
+            end
+        end
+    end)
+
+    local HeadControlFrame = Instance.new("Frame")
+    HeadControlFrame.Size = UDim2.new(1, -8, 0, 35)
+    HeadControlFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+    HeadControlFrame.LayoutOrder = 4
+    HeadControlFrame.Parent = ScrollingFrame
+
+    local HeadCtrlCorner = Instance.new("UICorner")
+    HeadCtrlCorner.CornerRadius = UDim.new(0, 6)
+    HeadCtrlCorner.Parent = HeadControlFrame
+
+    local HeadSizeLabel = Instance.new("TextLabel")
+    HeadSizeLabel.Size = UDim2.new(0.6, 0, 1, 0)
+    HeadSizeLabel.Position = UDim2.new(0, 10, 0, 0)
+    HeadSizeLabel.BackgroundTransparency = 1
+    HeadSizeLabel.Text = "📐 ขนาดหัว: " .. Head_Size
+    HeadSizeLabel.TextColor3 = Color3.fromRGB(255, 215, 0)
+    HeadSizeLabel.TextSize = 11
+    HeadSizeLabel.Font = Enum.Font.GothamMedium
+    HeadSizeLabel.TextXAlignment = Enum.TextXAlignment.Left
+    HeadSizeLabel.Parent = HeadControlFrame
+
+    local HeadMinusBtn = Instance.new("TextButton")
+    HeadMinusBtn.Size = UDim2.new(0, 26, 0, 25)
+    HeadMinusBtn.Position = UDim2.new(0.65, 0, 0.14, 0)
+    HeadMinusBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    HeadMinusBtn.Text = "➖"
+    HeadMinusBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    HeadMinusBtn.Parent = HeadControlFrame
+
+    local HeadPlusBtn = Instance.new("TextButton")
+    HeadPlusBtn.Size = UDim2.new(0, 26, 0, 25)
+    HeadPlusBtn.Position = UDim2.new(0.82, 0, 0.14, 0)
+    HeadPlusBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    HeadPlusBtn.Text = "➕"
+    HeadPlusBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    HeadPlusBtn.Parent = HeadControlFrame
+
+    HeadMinusBtn.MouseButton1Click:Connect(function()
+        if Head_Size > 2 then
+            Head_Size = Head_Size - 1
+            HeadSizeLabel.Text = "📐 ขนาดหัว: " .. Head_Size
+        end
+    end)
+
+    HeadPlusBtn.MouseButton1Click:Connect(function()
+        if Head_Size < 15 then
+            Head_Size = Head_Size + 1
+            HeadSizeLabel.Text = "📐 ขนาดหัว: " .. Head_Size
+        end
+    end)
+
+    -- 🌀 TOGGLE SPINBOT
+    CreateToggle("🌀 เปิดระบบหมุนตัวดิฟ (Spinbot)", 5, function(st) 
+        Spinbot_Enabled = st 
+        if not st then
+            if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                local hrp = LocalPlayer.Character.HumanoidRootPart
+                local av = hrp:FindFirstChild("UBN_AngularVelocity")
+                if av then av:Destroy() end
+                local att = hrp:FindFirstChild("UBN_Attachment")
+                if att then att:Destroy() end
+            end
+        end
+    end)
+
+    local SpinControlFrame = Instance.new("Frame")
+    SpinControlFrame.Size = UDim2.new(1, -8, 0, 35)
+    SpinControlFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+    SpinControlFrame.LayoutOrder = 6
+    SpinControlFrame.Parent = ScrollingFrame
+
+    local SpinCtrlCorner = Instance.new("UICorner")
+    SpinCtrlCorner.CornerRadius = UDim.new(0, 6)
+    SpinCtrlCorner.Parent = SpinControlFrame
+
+    local SpinSpeedLabel = Instance.new("TextLabel")
+    SpinSpeedLabel.Size = UDim2.new(0.6, 0, 1, 0)
+    SpinSpeedLabel.Position = UDim2.new(0, 10, 0, 0)
+    SpinSpeedLabel.BackgroundTransparency = 1
+    SpinSpeedLabel.Text = "⚡ ความเร็วหมุน: " .. Spin_Speed
+    SpinSpeedLabel.TextColor3 = Color3.fromRGB(255, 215, 0)
+    SpinSpeedLabel.TextSize = 11
+    SpinSpeedLabel.Font = Enum.Font.GothamMedium
+    SpinSpeedLabel.TextXAlignment = Enum.TextXAlignment.Left
+    SpinSpeedLabel.Parent = SpinControlFrame
+
+    local SpinMinusBtn = Instance.new("TextButton")
+    SpinMinusBtn.Size = UDim2.new(0, 26, 0, 25)
+    SpinMinusBtn.Position = UDim2.new(0.65, 0, 0.14, 0)
+    SpinMinusBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    SpinMinusBtn.Text = "➖"
+    SpinMinusBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    SpinMinusBtn.Parent = SpinControlFrame
+
+    local SpinPlusBtn = Instance.new("TextButton")
+    SpinPlusBtn.Size = UDim2.new(0, 26, 0, 25)
+    SpinPlusBtn.Position = UDim2.new(0.82, 0, 0.14, 0)
+    SpinPlusBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    SpinPlusBtn.Text = "➕"
+    SpinPlusBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    SpinPlusBtn.Parent = SpinControlFrame
+
+    SpinMinusBtn.MouseButton1Click:Connect(function()
+        if Spin_Speed > 10 then
+            Spin_Speed = Spin_Speed - 10
+            SpinSpeedLabel.Text = "⚡ ความเร็วหมุน: " .. Spin_Speed
+        end
+    end)
+
+    SpinPlusBtn.MouseButton1Click:Connect(function()
+        if Spin_Speed < 500 then
+            Spin_Speed = Spin_Speed + 10
+            SpinSpeedLabel.Text = "⚡ ความเร็วหมุน: " .. Spin_Speed
+        end
+    end)
+
+    CreateToggle("🌈 เปิดตัวละครสีรุ้งมองเห็นทุกคน (Rainbow)", 7, function(st)
+        RainbowChams_Enabled = st
+        if not st then
+            for _, p in pairs(Players:GetPlayers()) do
+                if p.Character and p.Character:FindFirstChild("UBN_Rainbow_Highlight") then
+                    p.Character.UBN_Rainbow_Highlight:Destroy()
+                end
+            end
+        end
+    end)
+
+    local ColorFrame = Instance.new("Frame")
+    ColorFrame.Size = UDim2.new(1, -8, 0, 65)
+    ColorFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    ColorFrame.LayoutOrder = 8
+    ColorFrame.Parent = ScrollingFrame
+
+    local ColorCorner = Instance.new("UICorner")
+    ColorCorner.CornerRadius = UDim.new(0, 6)
+    ColorCorner.Parent = ColorFrame
+
+    local ColorTitle = Instance.new("TextLabel")
+    ColorTitle.Size = UDim2.new(1, 0, 0, 20)
+    ColorTitle.BackgroundTransparency = 1
+    ColorTitle.Text = "🎨 เลือกสีเส้นโยง ESP"
+    ColorTitle.TextColor3 = Color3.fromRGB(255, 215, 0)
+    ColorTitle.TextSize = 11
+    ColorTitle.Font = Enum.Font.GothamBold
+    ColorTitle.Parent = ColorFrame
+
+    local ColorGrid = Instance.new("Frame")
+    ColorGrid.Size = UDim2.new(1, -10, 0, 35)
+    ColorGrid.Position = UDim2.new(0, 5, 0, 22)
+    ColorGrid.BackgroundTransparency = 1
+    ColorGrid.Parent = ColorFrame
+
+    local UIGrid = Instance.new("UIGridLayout")
+    UIGrid.CellSize = UDim2.new(0, 24, 0, 16)
+    UIGrid.CellPadding = UDim2.new(0, 3, 0, 3)
+    UIGrid.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    UIGrid.Parent = ColorGrid
+
+    local Colors = {
+        {Emoji = "🟨", Color = Color3.fromRGB(255, 215, 0)},
+        {Emoji = "🟥", Color = Color3.fromRGB(255, 50, 50)},
+        {Emoji = "🟩", Color = Color3.fromRGB(50, 255, 50)},
+        {Emoji = "🟦", Color = Color3.fromRGB(50, 150, 255)},
+        {Emoji = "🟪", Color = Color3.fromRGB(180, 70, 255)},
+        {Emoji = "⬜", Color = Color3.fromRGB(255, 255, 255)},
+        {Emoji = "🌈", Rainbow = true}
+    }
+
+    for _, item in ipairs(Colors) do
+        local cBtn = Instance.new("TextButton")
+        cBtn.Text = item.Emoji
+        cBtn.TextSize = 10
+        cBtn.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+        cBtn.Parent = ColorGrid
+        local cCorner = Instance.new("UICorner")
+        cCorner.CornerRadius = UDim.new(0, 4)
+        cCorner.Parent = cBtn
+        cBtn.MouseButton1Click:Connect(function()
+            if item.Rainbow then
+                IsRainbowESP = true
+            else
+                IsRainbowESP = false
+                CurrentESPColor = item.Color
+            end
+        end)
+    end
+
+    CloseBtn.MouseButton1Click:Connect(function() MainFrame.Visible = false end)
+    ToggleIconBtn.MouseButton1Click:Connect(function() MainFrame.Visible = not MainFrame.Visible end)
+
+    -- ========================================================
+    -- 👁️ ACCURATE ESP SYSTEM
+    -- ========================================================
+
+    local ESPHolder = Instance.new("Folder")
+    ESPHolder.Name = "UBN_ESPHolder"
+    ESPHolder.Parent = ScreenGui
+
+    local function GetESPObjects(player)
+        local name = "ESP_" .. player.Name
+        local folder = ESPHolder:FindFirstChild(name)
+        if not folder then
+            folder = Instance.new("Folder")
+            folder.Name = name
+            folder.Parent = ESPHolder
+
+            local line = Instance.new("Frame")
+            line.Name = "Line"
+            line.BorderSizePixel = 0
+            line.AnchorPoint = Vector2.new(0.5, 0.5)
+            line.ZIndex = 10
+            line.Parent = folder
+
+            local box = Instance.new("Frame")
+            box.Name = "Box"
+            box.BackgroundTransparency = 1
+            box.ZIndex = 10
+            box.Parent = folder
+            local stroke = Instance.new("UIStroke")
+            stroke.Thickness = 1.5
+            stroke.Parent = box
+
+            local hpBg = Instance.new("Frame")
+            hpBg.Name = "HpBg"
+            hpBg.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+            hpBg.BorderSizePixel = 0
+            hpBg.ZIndex = 10
+            hpBg.Parent = folder
+
+            local hpFill = Instance.new("Frame")
+            hpFill.Name = "HpFill"
+            hpFill.BackgroundColor3 = Color3.fromRGB(50, 255, 50)
+            hpFill.BorderSizePixel = 0
+            hpFill.ZIndex = 11
+            hpFill.Parent = hpBg
+
+            local nameTag = Instance.new("TextLabel")
+            nameTag.Name = "NameTag"
+            nameTag.BackgroundTransparency = 1
+            nameTag.TextSize = 11
+            nameTag.Font = Enum.Font.GothamBold
+            nameTag.TextColor3 = Color3.fromRGB(255, 255, 255)
+            nameTag.ZIndex = 11
+            nameTag.Parent = folder
+        end
+        return folder
+    end
+
+    local function UpdateESP()
+        for _, folder in pairs(ESPHolder:GetChildren()) do
+            folder.Line.Visible = false
+            folder.Box.Visible = false
+            folder.HpBg.Visible = false
+            folder.NameTag.Visible = false
+        end
+
+        if not ESP_Enabled then return end
+
+        local activeColor = IsRainbowESP and Color3.fromHSV((tick() % 3) / 3, 1, 1) or CurrentESPColor
+
+        for _, p in pairs(Players:GetPlayers()) do
+            if p ~= LocalPlayer and p.Character then
+                local char = p.Character
+                local hum = char:FindFirstChildOfClass("Humanoid")
+                local hrp = char:FindFirstChild("HumanoidRootPart")
+
+                if hrp and hum and hum.Health > 0 then
+                    local hrpPos, onScreen = Camera:WorldToViewportPoint(hrp.Position)
+
+                    if onScreen then
+                        local esp = GetESPObjects(p)
+                        
+                        local distance = (Camera.CFrame.Position - hrp.Position).Magnitude
+                        local factor = 1000 / distance
+                        local boxHeight = math.clamp(factor * 3.2, 10, 800)
+                        local boxWidth = boxHeight * 0.65
+
+                        -- 1. เส้นโยง ESP
+                        local startPos = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y)
+                        local endPos = Vector2.new(hrpPos.X, hrpPos.Y)
+                        local dist = (startPos - endPos).Magnitude
+                        local center = (startPos + endPos) / 2
+                        local angle = math.deg(math.atan2(endPos.Y - startPos.Y, endPos.X - startPos.X))
+
+                        esp.Line.Size = UDim2.new(0, dist, 0, 1.5)
+                        esp.Line.Position = UDim2.new(0, center.X, 0, center.Y)
+                        esp.Line.Rotation = angle
+                        esp.Line.BackgroundColor3 = activeColor
+                        esp.Line.Visible = true
+
+                        -- 2. กรอบสี่เหลี่ยม Box ESP
+                        esp.Box.Size = UDim2.new(0, boxWidth, 0, boxHeight)
+                        esp.Box.Position = UDim2.new(0, hrpPos.X - boxWidth/2, 0, hrpPos.Y - boxHeight/2)
+                        esp.Box.UIStroke.Color = activeColor
+                        esp.Box.Visible = true
+
+                        -- 3. หลอดเลือด Health Bar
+                        local hpPct = math.clamp(hum.Health / hum.MaxHealth, 0, 1)
+                        esp.HpBg.Size = UDim2.new(0, 3, 0, boxHeight)
+                        esp.HpBg.Position = UDim2.new(0, hrpPos.X - boxWidth/2 - 6, 0, hrpPos.Y - boxHeight/2)
+                        esp.HpBg.HpFill.Size = UDim2.new(1, 0, hpPct, 0)
+                        esp.HpBg.HpFill.Position = UDim2.new(0, 0, 1 - hpPct, 0)
+                        esp.HpBg.Visible = true
+
+                        -- 4. ชื่อ และ ระยะทาง
+                        local myHrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+                        local distMeter = myHrp and math.floor((myHrp.Position - hrp.Position).Magnitude) or 0
+                        esp.NameTag.Size = UDim2.new(0, 200, 0, 15)
+                        esp.NameTag.Position = UDim2.new(0, hrpPos.X - 100, 0, hrpPos.Y - boxHeight/2 - 18)
+                        esp.NameTag.Text = string.format("👤 %s [%dm]", p.DisplayName, distMeter)
+                        esp.NameTag.Visible = true
+                    end
+                end
+            end
+        end
+    end
+
+    Players.PlayerRemoving:Connect(function(p)
+        local f = ESPHolder:FindFirstChild("ESP_" .. p.Name)
+        if f then f:Destroy() end
+    end)
+
+    -- ========================================================
+    -- 🔥 AUTO SHOOT SYSTEM
+    -- ========================================================
+
+  
